@@ -40,10 +40,7 @@ http {
 
         root /app/frontend/build;
         index index.html;
-        
-        location / {
-            try_files $uri /$uri index.html;
-        } 
+        try_files $uri $uri/ /index.html;
         
         # static
         location /static {
