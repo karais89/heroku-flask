@@ -27,7 +27,7 @@ http {
       listen <%= ENV["PORT"] %>;
       server_name sleepy-wildwood-81398.herokuapp.com default_server;
 
-      root /app/frontend/build;
+      root /app/app/frontend/build;
       index index.html;
       location / {
           try_files $uri /$uri index.html;
