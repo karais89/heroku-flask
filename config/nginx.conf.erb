@@ -37,13 +37,13 @@ http {
 		keepalive_timeout 5;
         
         location = /favicon.ico { access_log off; log_not_found off; }
-     
+             
+        root /app/frontend/build;
         index page
         index index.html;
         location / {
-            root app/app/;
-            try_files $uri $uri/ /index.html;
-        }
+            try_files $uri /$uri index.html;
+        }   
 
         # flask static file
         location /static {
