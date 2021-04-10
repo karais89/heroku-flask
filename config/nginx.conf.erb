@@ -31,6 +31,7 @@ http {
 	}
     
     # 서버 설정 정리 필요.
+    # ^~ 변경자를 갖는 location 블럭의 시작 부분과 일치
 	server {
 		listen <%= ENV["PORT"] %>;
         server_name sleepy-wildwood-81398.herokuapp.com default_server;
@@ -43,6 +44,7 @@ http {
             alias /app/app/static;
         }
         
+        # static 이외에는 모두 gunicorn이 처리 한다.
         location / {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -50,5 +52,9 @@ http {
             proxy_redirect off;
             proxy_pass http://app_server;
         }
+
+        # api로 시작하면 모두 gunicorn이 처리한다.
+        # location ^~ /api {
+        # }
 	}
 }
