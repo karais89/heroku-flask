@@ -37,6 +37,11 @@ http {
 		keepalive_timeout 5;
         
         location = /favicon.ico { access_log off; log_not_found off; }
+     
+        index index.html;
+        location / {
+            try_files $uri /$uri index.html;
+        }
 
         location /static {
             alias /app/app/static;
