@@ -1,1 +1,1 @@
-web: gunicorn "prototype:create_app()"
+web: gunicorn run:app
