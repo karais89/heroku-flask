@@ -1,50 +1,61 @@
 daemon off;
-# Heroku dynos have at least 4 cores.
-worker_processes <%= ENV['NGINX_WORKERS'] || 4 %>;
+worker_processes auto;
 
 events {
-	use epoll;
-	accept_mutex on;
-	worker_connections <%= ENV['NGINX_WORKER_CONNECTIONS'] || 1024 %>;
+   use epoll;
+   accept_mutex on;
+   worker_connections 1024;
+   multi_accept on;
 }
 
 http {
-	gzip on;
-	gzip_comp_level 2;
-	gzip_min_length 512;
+   server_tokens off;
+   gzip on;
+   gzip_min_length 250;
 
-	server_tokens off;
+   access_log off;
+   error_log logs/nginx/error.log crit;
 
-	log_format l2met 'measure#nginx.service=$request_time request_id=$http_x_request_id';
-	access_log <%= ENV['NGINX_ACCESS_LOG_PATH'] || 'logs/nginx/access.log' %> l2met;
-	error_log <%= ENV['NGINX_ERROR_LOG_PATH'] || 'logs/nginx/error.log' %>;
+   include mime.types;
+   default_type application/octet-stream;
 
-	include mime.types;
-	default_type application/octet-stream;
-	sendfile on;
+   upstream app_server {
+      server unix:/tmp/nginx.socket fail_timeout=0;
+   }
 
-	# Must read the body in 5 seconds.
-	client_body_timeout 5;
+   server {
+      listen <%= ENV["PORT"] %>;
+      server_name example.com default_server;
+    
 
-	upstream app_server {
-		server unix:/tmp/nginx.socket fail_timeout=0;
-	}
-
-	server {
-		listen <%= ENV["PORT"] %>;
-		server_name _;
-		keepalive_timeout 5;
-
-		location / {
-			# Uncomment this if statement to force SSL/redirect http -> https
-			# if ($http_x_forwarded_proto != "https") {
-			#   return 301 https://$host$request_uri;
-			# }
-
-			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-			proxy_set_header Host $http_host;
-			proxy_redirect off;
-			proxy_pass http://app_server;
-		}
-	}
+      root /app/frontend/build;
+      index index.html;
+      location / {
+          try_files $uri /$uri index.html;
+      }     
+ 
+      location ^~ /api {
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header Host $server_name;
+         proxy_redirect off;
+         proxy_pass http://app_server;
+      }
+      location ^~ /admin {
+         proxy_set_header Host $http_host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header X-Forwarded-Host $http_host;
+         proxy_redirect off;
+         proxy_pass http://app_server;
+      }
+        
+      # static
+      location ~* \.(jpg|jpeg|png|gif|ico|svg|otf)$ {
+            expires 30d;
+        }
+        location ~* \.(css|js)$ {
+            expires 7d;
+        }
+   }
 }
