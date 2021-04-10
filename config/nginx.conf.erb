@@ -39,10 +39,10 @@ http {
         location = /favicon.ico { access_log off; log_not_found off; }
      
         # index page
-        index index.html;
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
+        # index index.html;
+        # location / {
+        #     try_files $uri $uri/ /index.html;
+        # }
 
         # flask static file
         location /static {
