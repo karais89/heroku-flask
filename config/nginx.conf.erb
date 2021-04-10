@@ -38,6 +38,9 @@ http {
         
         location = /favicon.ico { access_log off; log_not_found off; }
 
+        root /app/frontend/build;
+        index index.html;
+        
         # static
         location /static {
             alias /app/app/static;
